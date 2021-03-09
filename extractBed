@@ -1,0 +1,16 @@
+#! /bin/bash
+
+display_usage() { 
+	echo "$0 - creates a new bedfile containing only genes listed in gene_names (output: stdout)" 
+	echo -e "\nUsage: $0 bedfile gene_names\n" 
+}
+ 
+# if less than two arguments supplied, display usage 
+if [  $# -le 1 ] 
+	then 
+		display_usage
+	exit 1
+fi 
+
+sort -k4,4 $1 -o $1
+join -1 4 -2 1 $1 $2 -o 1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8,1.9,1.10,1.11,1.12 | tr " " "\t" 

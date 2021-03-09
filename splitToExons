@@ -1,0 +1,40 @@
+#!/usr/bin/env python
+
+import os
+import sys
+import argparse
+
+def main():
+	parser = argparse.ArgumentParser(description='Splits bed file into bed file containing individual exons')
+	parser.add_argument('bedFile', type=file, nargs=1, help='Bed file of sequence(s)')
+	parser.add_argument('--exonLabels', action='store_true', help='label each exon as gene_name_exonNumber')
+	args = parser.parse_args()
+
+	for line in args.bedFile[0].readlines():
+		line = line.split("\t")
+		chr = line[0].strip()
+		start = int(line[1].strip())
+		end = int(line[2].strip())
+		name = line[3].strip()
+		score = line[4].strip()
+		strand = line[5].strip()
+		numBlocks = int(line[9].strip())
+		blockSizes = line[10].split(",")
+		blockStarts = line[11].split(",")
+
+		for i in range(numBlocks):
+			exonStart = start + int(blockStarts[i])
+			exonEnd = exonStart + int(blockSizes[i])
+			
+			if args.exonLabels:
+				if strand == "+":
+					print("%s\t%d\t%d\t%s\t%d\t%s" % (chr,exonStart,exonEnd,name,i+1,strand))
+				else:
+					print("%s\t%d\t%d\t%s\t%d\t%s" % (chr,exonStart,exonEnd,name,numBlocks-i,strand))
+			else:
+				print("%s\t%d\t%d\t%s\t%s\t%s" % (chr,exonStart,exonEnd,name,score, strand))
+		
+	args.bedFile[0].close()
+
+if __name__ == "__main__":
+	main()

@@ -1,0 +1,58 @@
+#!/usr/bin/env python
+import os
+import sys
+import argparse
+
+
+def main():
+	parser = argparse.ArgumentParser(description='makeMatrix - given a list of files, writes a matrix to output such that rownames are from nameColumn and values are from valueColumn.')
+	parser.add_argument('file', type=file, help='list of files with data to add to matrix')
+	parser.add_argument('output', type=str, help='name of output file to write matrix')
+	parser.add_argument('--nameColumn', type=int, default=1, help='default: 1')
+	parser.add_argument('--valueColumn', type=int, default='2', help='default: 2')
+	args = parser.parse_args()
+
+	nameToValues = {}
+	filenames = args.file.readlines()
+
+	for fileName in filenames:
+		curFile = open(fileName.strip(), 'r')
+
+		lineNum = 0
+
+		for line in curFile.readlines():
+			if line[0]=="#":
+				continue
+
+			line = line.split()
+		
+	
+			name = line[args.nameColumn-1].strip()
+			value = line[args.valueColumn-1].strip()
+			if value == 'log_mu': continue
+
+			if name in nameToValues:
+				arr = nameToValues[name]
+				arr.append(value)
+				nameToValues[name] = arr
+			else:
+				nameToValues[name] = [value]
+
+	#write output
+	out = open(args.output, 'w')
+	out.write("#name")
+	for fileName in filenames:
+		out.write("\t%s" % fileName.strip())
+	out.write("\n")
+	
+	for name, values in sorted(nameToValues.iteritems()):
+		out.write(name)
+		
+		for i in range(len(values)):
+			out.write("\t%s" % values[i])
+
+		out.write("\n")
+
+
+if __name__ == "__main__":
+	main()

@@ -1,0 +1,101 @@
+#!/usr/bin/env python
+
+import os
+import sys
+import argparse
+import subprocess
+import math
+
+def main():
+	parser = argparse.ArgumentParser(description='A wrapper script to create and submit sbatch files')
+	parser.add_argument('file', type=str, help='path to file with commands to run')
+	parser.add_argument('prefix', type=str, help='prefix for outputs')
+	parser.add_argument('--norun', action='store_true', help='flag to make sbatch file but do not submit to slurm')
+	parser.add_argument('-n', type=int, help='number of cores', default = 1)
+	parser.add_argument('-N', type=int, help='number of nodes', default = 1)
+	parser.add_argument('-t', type=str, help='time (D-HH:MM)', default = '7-00:00')
+	parser.add_argument('-p', type=str, help='partition', default = 'eddy')
+	parser.add_argument('--mem', type=str, help='memoary', default = '10gb')
+	parser.add_argument('-ow', action = 'store_true', help="flag to overwrite existing sbatch files")
+	parser.add_argument('--exclude', action='store_true', help="exclude nodes")
+	args = parser.parse_args()
+	
+
+	EXCLUDE_NODES = "holy2c[14201-14204]"
+	if os.path.exists(args.prefix + ".sbatch") and not args.ow:
+		print(args.prefix + ".sbatch exists. Aborting...")
+		sys.exit()
+	
+	numCommands = subprocess.check_output("wc -l %s" % args.file, shell=True)
+	numCommands = int(numCommands.split()[0].strip())
+	
+	if not os.path.exists(args.prefix + ".logs") and numCommands > 1:
+		os.system('mkdir %s.logs' % args.prefix)
+	else:
+		if args.ow:
+			os.system('rm -r %s.logs' % args.prefix)
+			os.system('mkdir %s.logs' % args.prefix)
+	
+	out = open(args.prefix + ".sbatch", 'w')
+	
+	#write sbatch commands
+	out.write("#!/bin/bash\n")
+	out.write("#SBATCH -J %s\n" % args.prefix)
+	out.write("#SBATCH -n %d\n" % args.n)
+	out.write("#SBATCH -N %d\n" % args.N)
+	out.write("#SBATCH -t %s\n" % args.t)
+	out.write("#SBATCH -p %s\n" % args.p)
+	out.write("#SBATCH --mem %s\n" % args.mem)
+	if numCommands > 1:
+		out.write("#SBATCH -e %s.logs/%%A.%%a.err\n" % args.prefix)
+		out.write("#SBATCH -o %s.logs/%%A.%%a.out\n" % args.prefix)
+		out.write("#SBATCH --array 1-%s\n\n" % min(9999, numCommands))
+	else:
+		out.write("#SBATCH -e %s.%%A.err\n" % args.prefix)
+		out.write("#SBATCH -o %s.%%A.out\n" % args.prefix)
+
+	#copy .bashrc file
+	bashrc = open("/n/eddyfs01/home/jjenny/.bashrc", 'r')
+	for line in bashrc.readlines():
+		if line.startswith("PATH") or line.startswith("module"):
+			out.write(line)
+	out.write("\n")
+	
+	if os.path.isfile("module.list"):
+		module = open("module.list", 'r')
+		for line in module.readlines():
+			out.write(line)
+	out.write("\n")
+	
+	if numCommands > 9999:
+		numSplit = int(math.ceil(numCommands / 9999.0))
+		commandFile = open(args.file, 'r')
+		print("splitting %s into %d smaller files..." % (args.file, numSplit))
+		for i in range(1,(numSplit+1)):
+			subCommandFile = open(args.file + "." + str(i), 'w')
+			for j in range(9999):
+				line = commandFile.readline()
+				if line.strip() != "": subCommandFile.write(line)
+			subCommandFile.close()
+		
+			#split sh file
+			out.write("awk 'NR=='\"$SLURM_ARRAY_TASK_ID\"'' %s.%d | bash\n" % (args.file, i))
+
+
+	elif numCommands > 1:
+		out.write("awk 'NR=='\"$SLURM_ARRAY_TASK_ID\"'' %s | bash\n" % args.file)
+	else:
+		out.write("cat %s | bash\n" % args.file)
+	
+	out.close()
+
+	if not args.norun:
+		if args.exclude or numCommands > 9999:
+			print "sbatch --exclude=%s %s.sbatch" % (EXCLUDE_NODES, args.prefix)
+			os.system("sbatch --exclude=%s %s.sbatch" % (EXCLUDE_NODES, args.prefix))
+		else:
+			print "sbatch %s.sbatch" % (args.prefix)
+			os.system("sbatch %s.sbatch" % (args.prefix))
+
+if __name__ == "__main__":
+	main()

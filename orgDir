@@ -1,0 +1,13 @@
+#! /bin/bash
+
+if [ $# != 2 ]; then
+	echo "$0 - Organizes a directory so that everything that ends in *.suffix is moved into suffix/ directory if it exists. Running without run flag will print out bash commands without executing them."
+	echo ""
+	echo "Usage: orgDir run"
+	echo ""
+	echo "The following bash commands will be executed:"
+	ls -d */ | tr -d "/" | awk '{print "mv *"$1"* "$1"/"}' 
+
+else
+	ls -d */ | tr -d "/" | awk '{print "mv *"$1"* "$1"/"}'  | bash
+fi

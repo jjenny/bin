@@ -1,0 +1,16 @@
+#! /bin/bash
+
+if [ $# != 3 ]; then
+	echo "$0 - renames all files ending in *.suffix to a random file name. New filenames are listed in blind.txt. Running without run flag will create a blind.txt file without changing file names."
+	echo ""
+	echo "Usage: $0 suffix run"
+	echo ""
+	echo "Random file names have been created in the file blind.txt."
+	ls *$1 | awk 'BEGIN{srand();} {print $1"\t"rand()*1000".tif"}'  > blind.txt
+
+else
+
+	ls *$1 | awk 'BEGIN{srand();} {print $1"\t"rand()*1000".tif"}'  > blind.txt
+	awk '{print "mv "$1" "$2}'
+	awk '{print "mv "$1" "$2}' blind.txt | bash
+fi

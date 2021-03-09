@@ -1,0 +1,15 @@
+#! /bin/bash
+
+display_usage() { 
+	echo "$0 - displays the column number and corresponding column names from a file" 
+	echo -e "\nUsage: $0 file \n" 
+}
+ 
+# if less than one argument supplied, display usage 
+if [  $# -le 0 ] 
+	then 
+		display_usage
+	exit 1
+fi 
+
+head -n1 $1  | tr "\t" "\n" | awk '{print NR"\t"$1}'

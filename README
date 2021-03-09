@@ -1,0 +1,163 @@
+File wrangling utilities
+	colNames - displays the column number and corresponding column names from a file
+	orgDir - organizes a directory so that everything that ends in *.suffix is moved into suffix/ directory if it exists
+	randomizeFiles - renames all files ending in *.suffix to a random file name. New filenames are listed in blind.txt
+	makeMatrix - given a list of files, writes a matrix to output such that rownames are from nameColumn and values are from valueColumn.
+	topHit - sorts a file by <index>, and then <rank>, and filters out the top ranking line for each <index>
+
+Bedfile wrangling utilities
+	extractBed - creates a new bedfile containing only genes listed in gene_names
+	subtractBed - removes genes listed in gene_names from bedfile
+	splitToExons - Splits bed file into bed file containing individual exons
+
+Data analysis utilities
+	log10.R - calculates log10 from an input matrix (adds 0.01 pseudocount)
+	normTpm.R - normalizes a matrix of TPM values using calcNormFactors() from edgeR. Requires edgeR package
+	fTau.R - calculates fTau (a measure of tissue specificity) given a matrix of positive expression values
+	histogram - prints out a cartoon histogram of any input data
+	cluster - given multiple sets, combines overlapping sets into unique clusters
+
+Misc utilities
+	Sbatch - A wrapper script to create and submit sbatch files
+
+##########################################################################
+
+./colNames - displays the column number and corresponding column names from a file
+
+ Usage: ./colNames file
+
+positional arguments:
+  file		  path to file
+
+##########################################################################
+
+./orgDir - Organizes a directory so that everything that ends in *.suffix is moved into suffix/ directory if it exists. Running without run flag will print out bash commands without executing them.
+
+Usage: orgDir run
+
+##########################################################################
+
+./randomizeFiles - renames all files ending in *.suffix to a random file name. New filenames are listed in blind.txt. Running without run flag will create a blind.txt file without changing file names.
+
+Usage: ./randomizeFiles suffix run
+
+##########################################################################
+
+makeMatrix - given a list of files, writes a matrix to output such that rownames are from nameColumn and values are from valueColumn.
+
+usage: makeMatrix [-h] [--nameColumn NAMECOLUMN] [--valueColumn VALUECOLUMN]
+                  file output
+
+positional arguments:
+	file                  list of files with data to add to matrix
+	output                name of output file to write matrix
+
+optional arguments:
+	-h, --help            show this help message and exit
+	--nameColumn 		  NAMECOLUMN
+						  default: 1
+	--valueColumn 		  VALUECOLUMN
+						  default: 2
+
+##########################################################################
+
+./topHit - sorts a file by <index>, and then <rank>, and filters out the top ranking line for each <index> (output: file.top)
+
+Usage: ./topHit file index rank
+
+##########################################################################
+
+./extractBed - creates a new bedfile containing only genes listed in gene_names (output:stdout)
+
+Usage: ./extractBed bedfile gene_names
+
+##########################################################################
+
+./subtractBed - removes genes listed in gene_names from bedfile (output: stdout)
+
+Usage: ./subtractBed bedfile gene_names
+
+##########################################################################
+
+splitToExons - Splits bed file into bed file containing individual exons
+
+usage: splitToExons [-h] [--exonLabels] bedFile
+
+positional arguments:
+  bedFile       Bed file of sequence(s)
+
+  optional arguments:
+    -h, --help    show this help message and exit
+	  --exonLabels  label each exon as gene_name_exonNumbe
+
+##########################################################################
+
+log10.R - calculates log10 from an input matrix (adds 0.01 pseudocount)
+
+Usage: Rscript log10.R input output
+
+##########################################################################
+
+normTpm.R - normalizes a matrix of TPM values using calcNormFactors() from edgeR. Requires edgeR package.
+
+Usage: Rscript normTpm.R input output
+
+##########################################################################
+
+fTau.R - calculates fTau (a measure of tissue specificity) given a matrix of positive expression values
+
+Usage: Rscript fTau.R input output
+
+##########################################################################
+
+histogram - prints out a cartoon histogram of any input data
+
+Usage: cat data | histogram [options]
+
+Options:
+  -h, --help            show this help message and exit
+  -m MIN, --min=MIN     minimum value for graph
+  -x MAX, --max=MAX     maximum value for graph
+  -b BUCKETS, --buckets=BUCKETS
+                        Number of buckets to use for the histogram
+  --no-mvsd             Dissable the calculation of Mean, Vairance and SD.
+                        (improves performance)
+
+###########################################################################
+
+cluster - given multiple sets, combines overlapping sets into unique clusters
+
+usage: cluster [-h] file out
+
+positional arguments:
+  file        file where each line is a set
+  out         output file
+
+optional arguments:
+  -h, --help  show this help message and exit
+
+###########################################################################
+
+Sbatch - A wrapper script to create and submit sbatch files
+
+usage: Sbatch [-h] [--norun] [-n N] [-N N] [-t T] [-p P] [--mem MEM] [-ow]
+              [--exclude]
+              file prefix
+
+positional arguments:
+  file        path to file with commands to run
+  prefix      prefix for outputs
+
+optional arguments:
+  -h, --help  show this help message and exit
+  --norun     flag to make sbatch file but do not submit to slurm
+  -n N        number of cores
+  -N N        number of nodes
+  -t T        time (D-HH:MM)
+  -p P        partition
+  --mem MEM   memoary
+  -ow         flag to overwrite existing sbatch files
+  --exclude   exclude nodes
+
+##########################################################################
+

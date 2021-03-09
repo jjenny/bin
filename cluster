@@ -1,0 +1,53 @@
+#!/usr/bin/env python
+import os
+import sys
+import argparse
+import operator
+
+#takes in an array of sets and collapses them into unique clusters
+def makeClusters(sets):
+	merged = True
+	while merged:
+		merged = False
+		results = []
+		while sets:
+			common, rest = sets[0], sets[1:]
+			sets = []
+			for x in rest:
+				if x.isdisjoint(common):
+					sets.append(x)
+				else:
+					merged = True
+					common |= x
+			results.append(common)
+		sets = results
+	return sets
+
+
+def main():
+	parser = argparse.ArgumentParser(description='makeClusters - given multiple sets, combines overlapping sets into unique clusters')
+	parser.add_argument('file', type=file, help='file where each line is a set')
+	parser.add_argument('out', type=str, help='output file')
+	args = parser.parse_args()
+
+	sets = []
+	for line in args.file.readlines():
+		line = line.split()
+		curSet = set()
+		for item in line:
+			curSet.add(item.strip())
+		sets.append(curSet)
+			
+	clusters = makeClusters(sets)
+
+	out = open(args.out, 'w')
+
+	for cluster in clusters:
+		cluster = sorted(cluster, reverse=True)
+		out.write(cluster[0])
+		for i in range(1, len(cluster)):
+			out.write("\t%s" % cluster[i])
+		out.write("\n")
+		
+if __name__ == "__main__":
+	main()
